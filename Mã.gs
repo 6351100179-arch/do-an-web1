@@ -33,6 +33,16 @@ function chuanHanhDong_(hd, kq) {
   return "";
 }
 
+// Tìm cột theo tên tiêu đề (bỏ dấu, bỏ _ và khoảng trắng, không phân biệt hoa thường)
+function chuanTen_(t) {
+  return String(t || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    .replace(/đ/g, "d").replace(/Đ/g, "d").toLowerCase().replace(/[^a-z0-9]/g, "");
+}
+function timCot_(header, ten) {
+  for (var i = 0; i < header.length; i++) if (chuanTen_(header[i]) === ten) return i;
+  return -1;
+}
+
 // ==========================================
 // BẢO MẬT BẢO VỆ
 // ==========================================
@@ -151,24 +161,25 @@ function doPost(e) {
       var dmData = dm.getDataRange().getValues();
       var header = dmData[0];
       var nhanSu = null;
-      
+
+      // Tìm theo Mã ID (cột A) hoặc SĐT (cột F) - đọc theo VỊ TRÍ CỘT
       for (var i = 1; i < dmData.length; i++) {
         var rowData = dmData[i];
         var maID = String(rowData[0]).trim();
-        var sdt = String(rowData[5] || "").trim(); // Cột F là Số Điện Thoại
-        
-        if (maID.toLowerCase() === query.toLowerCase() || (sdt !== "" && sdt === query)) {
-          nhanSu = {};
-          for (var c = 0; c < header.length; c++) {
-            nhanSu[header[c]] = rowData[c];
-          }
+        var sdt = String(rowData[5] || "").trim();
+
+        if (maID.toLowerCase() === query.toLowerCase() ||
+            (sdt !== "" && (sdt === query || "0" + sdt === query || sdt === "0" + query))) {
+          nhanSu = rowData;
           break;
         }
       }
-      
+
       if (!nhanSu) return json_({ "status": "error", "message": "Không tìm thấy Mã ID hoặc Số điện thoại này" });
 
-      var maIDThucTe = String(nhanSu["Mã ID"] || "").trim(); 
+      var maIDThucTe = String(nhanSu[0] || "").trim();
+      var cotHieuLuc = timCot_(header, "hieuluctu");
+      var hieuLucRaw = cotHieuLuc > -1 ? nhanSu[cotHieuLuc] : "";
 
       var log = ss.getSheetByName("LOG_RA_VAO");
       var lichSu = [];
@@ -225,16 +236,16 @@ function doPost(e) {
         status: "success",
         nhanSu: {
           maID: maIDThucTe,
-          hoTen: nhanSu["Họ Tên"] || "",
-          donVi: nhanSu["Đơn Vị"] || "",
-          chungChi: nhanSu["Chứng Chỉ AT"] || "",
-          trangThai: nhanSu["Trạng Thái"] || "",
-          soDienThoai: nhanSu["Số Điện Thoại"] || "",
-          hanQR: nhanSu["Hạn Mã QR"] ? Utilities.formatDate(new Date(nhanSu["Hạn Mã QR"]), MUI_GIO, "dd/MM/yyyy") : "",
-          hanQRRaw: nhanSu["Hạn Mã QR"] || "",
-          loai: nhanSu["Loại"] || "worker",
-          hieuLucTuRaw: nhanSu["Hiệu Lực Từ"] || "",
-          hieuLucTu: nhanSu["Hiệu Lực Từ"] ? Utilities.formatDate(new Date(nhanSu["Hiệu Lực Từ"]), MUI_GIO, "dd/MM/yyyy HH:mm") : ""
+          hoTen: nhanSu[1] || "",
+          donVi: nhanSu[2] || "",
+          chungChi: nhanSu[3] || "",
+          trangThai: nhanSu[4] || "",
+          soDienThoai: nhanSu[5] || "",
+          hanQR: nhanSu[6] ? Utilities.formatDate(new Date(nhanSu[6]), MUI_GIO, "dd/MM/yyyy") : "",
+          hanQRRaw: nhanSu[6] || "",
+          loai: nhanSu[7] || "worker",
+          hieuLucTuRaw: hieuLucRaw || "",
+          hieuLucTu: hieuLucRaw ? Utilities.formatDate(new Date(hieuLucRaw), MUI_GIO, "dd/MM/yyyy HH:mm") : ""
         },
         trangThaiHienTai: trangThaiHienTai,
         gioVaoGanNhat: gioVaoGanNhat,
