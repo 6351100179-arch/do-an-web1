@@ -437,7 +437,7 @@
     <p>Nhập <b>Mã định danh</b> HOẶC <b>Số điện thoại</b> của bạn để xem thông tin cá nhân, thẻ QR và lịch sử ra vào.</p>
     <input type="text" id="w-login-id" placeholder="VD: NV021 hoặc 0901234567" autocomplete="off"
            onkeypress="if(event.key==='Enter') workerLogin()">
-    <button class="btn-success" onclick="workerLogin()">🔓 Đăng nhập</button>
+    <button id="w-login-btn" class="btn-success" onclick="workerLogin()">🔓 Đăng nhập</button>
     <div id="w-login-error" style="color:red;margin-top:10px;font-size:14px;"></div>
   </div>
 
@@ -1544,13 +1544,14 @@
 
     async function workerLogin(maIDTuDong) {
         const input = document.getElementById('w-login-id');
-        const inputValue = String(maIDTuDong || input.value || '').trim();
+        // Khi gọi từ onclick, tham số đầu có thể là Event -> chỉ nhận chuỗi
+        const inputValue = String(typeof maIDTuDong === 'string' ? maIDTuDong : (input.value || '')).trim();
         const errEl = document.getElementById('w-login-error');
+        const btn = document.getElementById('w-login-btn');
         errEl.textContent = '';
 
         if (!inputValue) { errEl.textContent = 'Vui lòng nhập Mã ID hoặc Số điện thoại'; return; }
 
-        const btn = event && event.target;
         if (btn) { btn.disabled = true; btn.innerText = 'Đang tải...'; }
 
         try {
@@ -1563,17 +1564,18 @@
 
             if (r.status !== 'success') {
                 errEl.textContent = r.message || 'Không tìm thấy thông tin';
-                if (btn) { btn.disabled = false; btn.innerText = '🔓 Đăng nhập'; }
                 return;
             }
 
             workerData = r;
-            localStorage.setItem('worker_maID', r.nhanSu.maID); 
+            localStorage.setItem('worker_maID', r.nhanSu.maID);
             renderWorkerPortal(r);
             document.getElementById('w-login').style.display = 'none';
             document.getElementById('w-content').style.display = 'block';
         } catch (e) {
             errEl.textContent = 'Lỗi kết nối: ' + e.message;
+        } finally {
+            // Luôn mở lại nút dù thành công hay thất bại
             if (btn) { btn.disabled = false; btn.innerText = '🔓 Đăng nhập'; }
         }
     }
@@ -1585,6 +1587,8 @@
         document.getElementById('w-content').style.display = 'none';
         document.getElementById('w-login-id').value = '';
         document.getElementById('w-login-error').textContent = '';
+        const lb = document.getElementById('w-login-btn');
+        if (lb) { lb.disabled = false; lb.innerText = '🔓 Đăng nhập'; }
     }
 
     function renderWorkerPortal(r) {
