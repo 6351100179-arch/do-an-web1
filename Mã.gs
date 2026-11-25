@@ -1,11 +1,11 @@
-const MAT_KHAU_ADMIN = "123456"; // Bạn có thể đổi mã PIN tùy ý ở đây (nên đặt dài hơn 6 số)
+const MAT_KHAU_ADMIN = "123456"; // Đổi PIN tùy ý
 const MUI_GIO = "Asia/Ho_Chi_Minh";
 
 function json_(obj) {
   return ContentService.createTextOutput(JSON.stringify(obj)).setMimeType(ContentService.MimeType.JSON);
 }
 
-// Đổi chuỗi "yyyy-MM-dd[THH:mm[:ss]]" (giờ Việt Nam) thành Date để Sheet lưu đúng giờ
+// Đổi chuỗi "yyyy-MM-dd[THH:mm[:ss]]" (giờ VN) thành Date
 function parseGio_(s) {
   if (!s) return "";
   try {
@@ -17,7 +17,7 @@ function parseGio_(s) {
   }
 }
 
-// Xác định hành động in/out từ cột "Hành Động" hoặc từ chữ trong "Kết Quả"
+// Xác định hành động in/out
 function chuanHanhDong_(hd, kq) {
   var a = String(hd || "").trim().toLowerCase();
   if (a === "in" || a === "out") return a;
@@ -33,7 +33,7 @@ function doPost(e) {
     var ss = SpreadsheetApp.getActiveSpreadsheet();
 
     // ==========================================
-    // ĐĂNG NHẬP QUẢN LÝ: kiểm tra mã PIN trên server
+    // ĐĂNG NHẬP QUẢN LÝ
     // ==========================================
     if (data.action === "login") {
       if (data.pin === MAT_KHAU_ADMIN) return json_({ "status": "success" });
@@ -41,7 +41,7 @@ function doPost(e) {
     }
 
     // ==========================================
-    // QUẢN LÝ XÁC NHẬN "ĐÃ RA" (cho người quên check-out) - YÊU CẦU MÃ PIN
+    // QUẢN LÝ XÁC NHẬN "ĐÃ RA"
     // ==========================================
     if (data.action === "force_out") {
       if (data.pin !== MAT_KHAU_ADMIN) {
@@ -54,112 +54,76 @@ function doPost(e) {
     }
 
     // ==========================================
-    // TRƯỜNG HỢP 1: QUÉT MÃ (Ghi log ra vào) - Ai cũng làm được
+    // QUÉT MÃ (Ghi log ra vào)
     // ==========================================
     if (data.action === "scan") {
       var logSheet = ss.getSheetByName("LOG_RA_VAO");
-      if(!logSheet) {
+      if (!logSheet) {
         logSheet = ss.insertSheet("LOG_RA_VAO");
         logSheet.appendRow(["Thời Gian", "Mã ID", "Họ Tên", "Hành Động", "Kết Quả", "Ghi Chú"]);
       }
       logSheet.appendRow([new Date(), data.maID, data.hoTen, data.hanhDong || "", data.ketQua, data.ghiChu || ""]);
-      return ContentService.createTextOutput(JSON.stringify({"status": "success"})).setMimeType(ContentService.MimeType.JSON);
+      return json_({ "status": "success" });
     }
-    
+
     // ==========================================
-    // TRƯỜNG HỢP 2: CẬP NHẬT SỐ LẦN DÙNG
-    // ==========================================
-    if (data.action === "update_usage") {
-      var dmSheet = ss.getSheetByName("DM_NHAN_SU");
-      var lastRow = dmSheet.getLastRow();
-      var dataRange = dmSheet.getRange(1, 1, lastRow, 10).getValues(); 
-      
-      for (var i = 0; i < dataRange.length; i++) {
-        if (dataRange[i][0] == data.maID) {
-          var rowIndex = i + 1;
-          var currentSoLan = parseInt(dataRange[i][9]) || 0;
-          if (currentSoLan > 0) {
-            dmSheet.getRange(rowIndex, 10).setValue(currentSoLan - 1);
-          }
-          break;
-        }
-      }
-      return ContentService.createTextOutput(JSON.stringify({"status": "success"})).setMimeType(ContentService.MimeType.JSON);
-    }
-    
-    // ==========================================
-    // TRƯỜNG HỢP 3: ĐĂNG KÝ MỚI (YÊU CẦU MÃ PIN)
+    // ĐĂNG KÝ MỚI (YÊU CẦU MÃ PIN) — KHÔNG LƯU ẢNH, CÓ SỐ ĐIỆN THOẠI
     // ==========================================
     if (data.action === "register") {
-      // KIỂM TRA MÃ PIN BẢO MẬT
       if (data.pin !== MAT_KHAU_ADMIN) {
-        return ContentService.createTextOutput(JSON.stringify({
-          "status": "error", 
+        return json_({
+          "status": "error",
           "message": "Mã PIN không chính xác. Bạn không có quyền đăng ký!"
-        })).setMimeType(ContentService.MimeType.JSON);
+        });
       }
 
-      var imageUrl = "";
-      
-      // Xử lý lưu ảnh thẻ (nếu có)
-      if (data.image && data.image.includes(',')) {
-        try {
-          var folderName = "Anh_Nhan_Su_Cong_Truong";
-          var folders = DriveApp.getFoldersByName(folderName);
-          var folder = folders.hasNext() ? folders.next() : DriveApp.createFolder(folderName);
-          
-          var splitBase = data.image.split(',');
-          var contentType = splitBase[0].split(':')[1].split(';')[0];
-          var bytes = Utilities.base64Decode(splitBase[1]);
-          var blob = Utilities.newBlob(bytes, contentType, data.maID + "_" + data.hoTen + ".jpg");
-          var file = folder.createFile(blob);
-          file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
-          imageUrl = file.getUrl();
-        } catch (imgError) {
-          console.error("Lỗi lưu ảnh: " + imgError);
-        }
-      }
-      
       var dmSheet = ss.getSheetByName("DM_NHAN_SU");
-      
-      // Lưu hồ sơ (cột G = hết hiệu lực, cột K = có hiệu lực từ; lưu dạng ngày giờ thật)
+      if (!dmSheet) {
+        dmSheet = ss.insertSheet("DM_NHAN_SU");
+        dmSheet.appendRow([
+          "Mã ID", "Họ Tên", "Đơn Vị", "Chứng Chỉ AT", "Trạng Thái",
+          "Số Điện Thoại", "Hạn Mã QR", "Loại", "Mục Đích",
+          "Biển Số", "Hiệu Lực Từ", "CCCD"
+        ]);
+      }
+
+      // Thứ tự cột (KHÔNG còn ảnh):
+      // A=0 maID | B=1 hoTen | C=2 donVi | D=3 chungChi | E=4 trangThai
+      // F=5 soDienThoai | G=6 validTo | H=7 loai | I=8 mucDich
+      // J=9 bienSo | K=10 validFrom | L=11 cccd
       dmSheet.appendRow([
-        data.maID, 
-        data.hoTen, 
-        data.donVi, 
-        data.chungChi, 
-        "Đang làm", 
-        imageUrl, 
-        parseGio_(data.validTo), 
-        data.loai || "worker", 
+        data.maID,
+        data.hoTen,
+        data.donVi,
+        data.chungChi,
+        "Đang làm",
+        data.soDienThoai || "",
+        parseGio_(data.validTo),
+        data.loai || "worker",
         data.mucDich || "",
         data.bienSo || "",
-        parseGio_(data.validFrom)
+        parseGio_(data.validFrom),
+        data.cccd || ""
       ]);
-      
+
       var qrUrl = "https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=" + data.maID;
-      
-      return ContentService.createTextOutput(JSON.stringify({
-        "status": "success", 
+
+      return json_({
+        "status": "success",
         "message": "Đăng ký thành công",
-        "imageUrl": imageUrl, 
         "qrCodeUrl": qrUrl
-      })).setMimeType(ContentService.MimeType.JSON);
+      });
     }
-    
-    return ContentService.createTextOutput(JSON.stringify({"status": "error", "message": "Action không hợp lệ"})).setMimeType(ContentService.MimeType.JSON);
+
+    return json_({ "status": "error", "message": "Action không hợp lệ" });
 
   } catch (error) {
-    return ContentService.createTextOutput(JSON.stringify({"status": "error", "message": error.toString()})).setMimeType(ContentService.MimeType.JSON);
+    return json_({ "status": "error", "message": error.toString() });
   }
 }
 
 // ==========================================
-// LỊCH SỬ RA VÀO từ sheet LOG_RA_VAO
-// Cột: A=Thời Gian, B=Mã ID, C=Họ Tên, D=Hành Động, E=Kết Quả, F=Ghi Chú
-// - Mặc định: chỉ trả lượt quét của HÔM NAY (nhẹ, cho điện thoại quét)
-// - from/to (yyyy-MM-dd): trả lượt quét trong khoảng ngày
-// - quenCheckout: người có lượt hợp lệ gần nhất là VÀO của ngày trước hôm nay
+// LỊCH SỬ RA VÀO
 // ==========================================
 function layLichSu_(from, to) {
   var sh = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("LOG_RA_VAO");
@@ -168,9 +132,9 @@ function layLichSu_(from, to) {
   var homNay = Utilities.formatDate(new Date(), MUI_GIO, "yyyy-MM-dd");
   var tuNgay = from || homNay;
   var denNgay = to || homNay;
-  var rows = sh.getDataRange().getValues().slice(1); // bỏ dòng tiêu đề
+  var rows = sh.getDataRange().getValues().slice(1);
   var history = [];
-  var last = {}; // maID -> lượt hợp lệ gần nhất
+  var last = {};
 
   rows.forEach(function (r) {
     var t = r[0];
@@ -213,12 +177,11 @@ function layLichSu_(from, to) {
     }
   });
 
-  return { history: history, quenCheckout: quen }; // history theo thứ tự cũ -> mới
+  return { history: history, quenCheckout: quen };
 }
 
 function doGet(e) {
   try {
-    // Lịch sử: ?action=history  (hôm nay)  |  ?action=history&from=...&to=...&pin=...  (khoảng ngày, cần PIN)
     if (e && e.parameter && e.parameter.action === "history") {
       var from = e.parameter.from, to = e.parameter.to;
       if (from || to) {
@@ -233,7 +196,6 @@ function doGet(e) {
       return json_(layLichSu_(from, to));
     }
 
-    // Mặc định: trả danh sách nhân sự (như cũ)
     var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("DM_NHAN_SU");
     var data = sheet.getDataRange().getValues();
     return ContentService.createTextOutput(JSON.stringify(data)).setMimeType(ContentService.MimeType.JSON);
