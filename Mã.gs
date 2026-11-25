@@ -1,4 +1,10 @@
-const MAT_KHAU_ADMIN = "123456"; // Đổi PIN tùy ý
+// ==========================================
+// CẤU HÌNH BẢO MẬT
+// ==========================================
+const MAT_KHAU_ADMIN = "123456";        // PIN quản lý
+const MAT_KHAU_BAOVE = "888888";        // PIN bảo vệ (ĐỔI TÙY Ý)
+const SO_LAN_SAI_TOI_DA = 5;            // Sai 5 lần → khóa
+const PHUT_KHOA = 5;                    // Khóa 5 phút
 const MUI_GIO = "Asia/Ho_Chi_Minh";
 
 function json_(obj) {
@@ -27,22 +33,87 @@ function chuanHanhDong_(hd, kq) {
   return "";
 }
 
+// ==========================================
+// BẢO MẬT BẢO VỆ
+// ==========================================
+function laySheetBaoMat_() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sh = ss.getSheetByName("BAO_MAT_BAOVE");
+  if (!sh) {
+    sh = ss.insertSheet("BAO_MAT_BAOVE");
+    sh.appendRow(["Thời Gian", "Loại", "Chi Tiết", "Kết Quả"]);
+  }
+  return sh;
+}
+
+function kiemTraKhoa_() {
+  var sh = laySheetBaoMat_();
+  var rows = sh.getDataRange().getValues().slice(1);
+  var bayGio = new Date().getTime();
+  var soLanSai = 0;
+  var lanSaiCuoi = 0;
+  rows.forEach(function (r) {
+    if (String(r[1]) === "login_fail") {
+      var t = r[0] instanceof Date ? r[0].getTime() : new Date(r[0]).getTime();
+      if (bayGio - t < PHUT_KHOA * 60 * 1000) {
+        soLanSai++;
+        if (t > lanSaiCuoi) lanSaiCuoi = t;
+      }
+    }
+  });
+  if (soLanSai >= SO_LAN_SAI_TOI_DA) {
+    var conLai = Math.ceil((lanSaiCuoi + PHUT_KHOA * 60 * 1000 - bayGio) / 60000);
+    return { locked: true, conLai: conLai > 0 ? conLai : 1 };
+  }
+  return { locked: false };
+}
+
+function ghiLogBaoMat_(loai, chiTiet, ketQua) {
+  laySheetBaoMat_().appendRow([new Date(), loai, chiTiet || "", ketQua || ""]);
+}
+
+function xacThucBaoVe_(pin) {
+  var khoa = kiemTraKhoa_();
+  if (khoa.locked) {
+    return { ok: false, message: "Đã khóa do sai quá " + SO_LAN_SAI_TOI_DA + " lần. Thử lại sau " + khoa.conLai + " phút." };
+  }
+  if (pin === MAT_KHAU_BAOVE) {
+    return { ok: true };
+  }
+  ghiLogBaoMat_("login_fail", "Sai PIN bảo vệ", "FAIL");
+  return { ok: false, message: "Mã PIN bảo vệ không chính xác." };
+}
+
+// ==========================================
+// doPost
+// ==========================================
 function doPost(e) {
   try {
     var data = JSON.parse(e.postData.contents);
     var ss = SpreadsheetApp.getActiveSpreadsheet();
 
-    // ==========================================
     // ĐĂNG NHẬP QUẢN LÝ
-    // ==========================================
     if (data.action === "login") {
       if (data.pin === MAT_KHAU_ADMIN) return json_({ "status": "success" });
       return json_({ "status": "error", "message": "Mã PIN không chính xác" });
     }
 
-    // ==========================================
+    // ĐĂNG NHẬP BẢO VỆ
+    if (data.action === "login_guard") {
+      var kq = xacThucBaoVe_(String(data.pin || ""));
+      if (!kq.ok) return json_({ "status": "error", "message": kq.message });
+      ghiLogBaoMat_("login_success", "Bảo vệ đăng nhập", "OK");
+      return json_({ "status": "success", "message": "Đăng nhập bảo vệ thành công" });
+    }
+
+    // KIỂM TRA PHIÊN BẢO VỆ
+    if (data.action === "check_guard_session") {
+      var kqSess = xacThucBaoVe_(String(data.pin || ""));
+      if (!kqSess.ok) return json_({ "status": "error", "message": kqSess.message, "needRelogin": true });
+      return json_({ "status": "success" });
+    }
+
     // QUẢN LÝ XÁC NHẬN "ĐÃ RA"
-    // ==========================================
     if (data.action === "force_out") {
       if (data.pin !== MAT_KHAU_ADMIN) {
         return json_({ "status": "error", "message": "Mã PIN không chính xác. Bạn không có quyền!" });
@@ -53,10 +124,13 @@ function doPost(e) {
       return json_({ "status": "success" });
     }
 
-    // ==========================================
-    // QUÉT MÃ (Ghi log ra vào)
-    // ==========================================
+    // QUÉT MÃ (YÊU CẦU PIN BẢO VỆ)
     if (data.action === "scan") {
+      var kqScan = xacThucBaoVe_(String(data.pin || ""));
+      if (!kqScan.ok) {
+        ghiLogBaoMat_("scan_fail", "Quét không có PIN hợp lệ: " + (data.maID || "?"), "BLOCK");
+        return json_({ "status": "error", "message": kqScan.message, "needRelogin": true });
+      }
       var logSheet = ss.getSheetByName("LOG_RA_VAO");
       if (!logSheet) {
         logSheet = ss.insertSheet("LOG_RA_VAO");
@@ -66,15 +140,110 @@ function doPost(e) {
       return json_({ "status": "success" });
     }
 
-    // ==========================================
-    // ĐĂNG KÝ MỚI (YÊU CẦU MÃ PIN) — KHÔNG LƯU ẢNH, CÓ SỐ ĐIỆN THOẠI
-    // ==========================================
+    // LẤY THÔNG TIN CÁ NHÂN (CỔNG CÔNG NHÂN)
+    if (data.action === "my_info") {
+      var maID = String(data.maID || "").trim();
+      if (!maID) return json_({ "status": "error", "message": "Thiếu mã ID" });
+
+      var dm = ss.getSheetByName("DM_NHAN_SU");
+      if (!dm) return json_({ "status": "error", "message": "Chưa có sheet DM_NHAN_SU" });
+
+      var dmData = dm.getDataRange().getValues();
+      var header = dmData[0];
+      var nhanSu = null;
+      for (var i = 1; i < dmData.length; i++) {
+        if (String(dmData[i][0]).trim() === maID) {
+          nhanSu = {};
+          for (var c = 0; c < header.length; c++) {
+            nhanSu[header[c]] = dmData[i][c];
+          }
+          break;
+        }
+      }
+      if (!nhanSu) return json_({ "status": "error", "message": "Không tìm thấy mã ID này" });
+
+      var log = ss.getSheetByName("LOG_RA_VAO");
+      var lichSu = [];
+      var homNay = Utilities.formatDate(new Date(), MUI_GIO, "yyyy-MM-dd");
+      var baMuoiNgayTruoc = Utilities.formatDate(new Date(Date.now() - 30 * 24 * 3600 * 1000), MUI_GIO, "yyyy-MM-dd");
+
+      if (log) {
+        var logData = log.getDataRange().getValues().slice(1);
+        logData.forEach(function (r) {
+          if (String(r[1]).trim() !== maID) return;
+          var t = r[0] instanceof Date ? r[0] : new Date(r[0]);
+          if (isNaN(t.getTime())) return;
+          var ngay = Utilities.formatDate(t, MUI_GIO, "yyyy-MM-dd");
+          if (ngay < baMuoiNgayTruoc) return;
+          lichSu.push({
+            thoiGian: Utilities.formatDate(t, MUI_GIO, "HH:mm:ss dd/MM/yyyy"),
+            ts: t.getTime(),
+            ngay: ngay,
+            homNay: ngay === homNay,
+            hanhDong: chuanHanhDong_(r[3], r[4]),
+            ketQua: String(r[4] || ""),
+            ghiChu: String(r[5] || "")
+          });
+        });
+      }
+
+      var trangThaiHienTai = "ra";
+      var gioVaoGanNhat = null;
+      for (var j = lichSu.length - 1; j >= 0; j--) {
+        var h = lichSu[j];
+        if (h.ketQua.indexOf("Hợp lệ") === 0) {
+          if (h.hanhDong === "in") { trangThaiHienTai = "trong"; gioVaoGanNhat = h.thoiGian; break; }
+          if (h.hanhDong === "out") { trangThaiHienTai = "ra"; break; }
+        }
+      }
+
+      var soNgayCong = {};
+      var tongMs = 0;
+      var lastIn = null;
+      var soCanhBao = 0;
+      lichSu.forEach(function (h) {
+        if (h.ketQua.indexOf("Hợp lệ") !== 0) {
+          if (h.ketQua.indexOf("Cảnh báo") > -1) soCanhBao++;
+          return;
+        }
+        if (h.hanhDong === "in") { lastIn = h.ts; soNgayCong[h.ngay] = true; }
+        else if (h.hanhDong === "out" && lastIn !== null) {
+          tongMs += h.ts - lastIn;
+          lastIn = null;
+        }
+      });
+
+      return json_({
+        status: "success",
+        nhanSu: {
+          maID: nhanSu["Mã ID"] || maID,
+          hoTen: nhanSu["Họ Tên"] || "",
+          donVi: nhanSu["Đơn Vị"] || "",
+          chungChi: nhanSu["Chứng Chỉ AT"] || "",
+          trangThai: nhanSu["Trạng Thái"] || "",
+          soDienThoai: nhanSu["Số Điện Thoại"] || "",
+          hanQR: nhanSu["Hạn Mã QR"] ? Utilities.formatDate(new Date(nhanSu["Hạn Mã QR"]), MUI_GIO, "dd/MM/yyyy") : "",
+          hanQRRaw: nhanSu["Hạn Mã QR"] || "",
+          loai: nhanSu["Loại"] || "worker",
+          hieuLucTuRaw: nhanSu["Hiệu Lực Từ"] || "",
+          hieuLucTu: nhanSu["Hiệu Lực Từ"] ? Utilities.formatDate(new Date(nhanSu["Hiệu Lực Từ"]), MUI_GIO, "dd/MM/yyyy HH:mm") : ""
+        },
+        trangThaiHienTai: trangThaiHienTai,
+        gioVaoGanNhat: gioVaoGanNhat,
+        thongKe: {
+          soNgayCong: Object.keys(soNgayCong).length,
+          tongGio: Math.round(tongMs / 36000) / 100,
+          soCanhBao: soCanhBao,
+          soLuot: lichSu.length
+        },
+        lichSu: lichSu.slice(-50)
+      });
+    }
+
+    // ĐĂNG KÝ MỚI
     if (data.action === "register") {
       if (data.pin !== MAT_KHAU_ADMIN) {
-        return json_({
-          "status": "error",
-          "message": "Mã PIN không chính xác. Bạn không có quyền đăng ký!"
-        });
+        return json_({ "status": "error", "message": "Mã PIN không chính xác. Bạn không có quyền đăng ký!" });
       }
 
       var dmSheet = ss.getSheetByName("DM_NHAN_SU");
@@ -87,10 +256,6 @@ function doPost(e) {
         ]);
       }
 
-      // Thứ tự cột (KHÔNG còn ảnh):
-      // A=0 maID | B=1 hoTen | C=2 donVi | D=3 chungChi | E=4 trangThai
-      // F=5 soDienThoai | G=6 validTo | H=7 loai | I=8 mucDich
-      // J=9 bienSo | K=10 validFrom | L=11 cccd
       dmSheet.appendRow([
         data.maID,
         data.hoTen,
@@ -107,16 +272,10 @@ function doPost(e) {
       ]);
 
       var qrUrl = "https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=" + data.maID;
-
-      return json_({
-        "status": "success",
-        "message": "Đăng ký thành công",
-        "qrCodeUrl": qrUrl
-      });
+      return json_({ "status": "success", "message": "Đăng ký thành công", "qrCodeUrl": qrUrl });
     }
 
     return json_({ "status": "error", "message": "Action không hợp lệ" });
-
   } catch (error) {
     return json_({ "status": "error", "message": error.toString() });
   }

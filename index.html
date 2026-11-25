@@ -56,16 +56,15 @@
         .btn-download { background: #17a2b8; padding: 6px 10px; font-size: 12px; width: auto; margin: 0; display: inline-block;} .btn-download:hover { background: #138496; }
 
         .table-responsive { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; margin-top: 10px; }
-        #dataTable, #historyTable, #presenceTable { width: 100%; min-width: 700px; border-collapse: collapse; }
+        #dataTable, #historyTable, #presenceTable, #warnTable, #rangeTable { width: 100%; min-width: 700px; border-collapse: collapse; }
         #dataTable th, #dataTable td,
         #historyTable th, #historyTable td,
-        #presenceTable th, #presenceTable td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 13px; white-space: nowrap; }
-        #dataTable th, #historyTable th, #presenceTable th { background: #f8f9fa; }
+        #presenceTable th, #presenceTable td,
+        #warnTable th, #warnTable td,
+        #rangeTable th, #rangeTable td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 13px; white-space: nowrap; }
+        #dataTable th, #historyTable th, #presenceTable th, #warnTable th, #rangeTable th { background: #f8f9fa; }
         .status-ok { color: green; font-weight: bold; } .status-bad { color: red; font-weight: bold; }
         .status-warn { color: #fd7e14; font-weight: bold; }
-
-        #qrcode-container { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 20px; justify-content: center; max-height: 400px; overflow-y: auto; padding: 10px; border: 1px dashed #ccc;}
-        .qr-item { text-align: center; background: #fff; padding: 10px; border-radius: 5px; border: 1px solid #eee; width: 100px;}
 
         .manual-input { display: flex; gap: 8px; margin-top: 15px; flex-wrap: wrap; }
         .manual-input input { flex: 1 1 200px; padding: 12px; border: 1px solid #ccc; border-radius: 5px; font-size: 16px; }
@@ -91,9 +90,124 @@
         .filter-bar label { display: block; font-weight: bold; font-size: 13px; margin-bottom: 4px; }
         .filter-bar input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; font-size: 15px; }
         .filter-bar button { flex: 0 0 auto; width: auto; margin: 0; }
-        #rangeTable, #warnTable { width: 100%; min-width: 700px; border-collapse: collapse; }
-        #rangeTable th, #rangeTable td, #warnTable th, #warnTable td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 13px; white-space: nowrap; }
-        #rangeTable th, #warnTable th { background: #f8f9fa; }
+
+        /* ===== CỔNG CÔNG NHÂN ===== */
+        .worker-portal { display: none; }
+        .worker-portal.active { display: block; animation: fadeIn 0.4s; }
+
+        .w-hero {
+            background: linear-gradient(135deg, #0056b3 0%, #007bff 100%);
+            color: white; padding: 25px 20px; border-radius: 12px;
+            margin-bottom: 20px; text-align: center; box-shadow: 0 4px 15px rgba(0,86,179,0.3);
+        }
+        .w-hero h2 { color: white; margin: 0 0 5px 0; font-size: 22px; }
+        .w-hero .w-id { font-size: 13px; opacity: 0.9; }
+        .w-hero .w-status {
+            display: inline-block; margin-top: 12px; padding: 8px 20px;
+            border-radius: 20px; font-weight: bold; font-size: 14px;
+        }
+        .w-status.in { background: #28a745; color: white; }
+        .w-status.out { background: #dc3545; color: white; }
+
+        .w-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 20px; }
+        @media (min-width: 600px) { .w-grid { grid-template-columns: repeat(4, 1fr); } }
+        .w-stat {
+            background: white; border: 2px solid #e0e0e0; border-radius: 10px;
+            padding: 15px 10px; text-align: center;
+        }
+        .w-stat .w-num { font-size: 26px; font-weight: bold; color: #0056b3; }
+        .w-stat .w-label { font-size: 12px; color: #666; margin-top: 4px; }
+
+        .w-alert {
+            background: #fff3cd; border-left: 5px solid #fd7e14;
+            padding: 12px 15px; border-radius: 8px; margin-bottom: 12px;
+            font-size: 14px; color: #664d03;
+        }
+        .w-alert.danger { background: #f8d7da; border-color: #dc3545; color: #721c24; }
+        .w-alert strong { display: block; margin-bottom: 4px; }
+
+        .w-card {
+            background: white; border-radius: 12px; padding: 20px;
+            margin-bottom: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+        }
+        .w-card h3 { margin-top: 0; color: #0056b3; font-size: 16px; }
+
+        .w-qr-big { display: flex; flex-direction: column; align-items: center; gap: 15px; }
+        .w-qr-big .qr-code { padding: 15px; background: white; border: 3px solid #0056b3; border-radius: 12px; }
+        .w-qr-big .qr-info { text-align: center; }
+        .w-qr-big .qr-info .name { font-size: 20px; font-weight: bold; color: #0056b3; }
+        .w-qr-big .qr-info .meta { font-size: 13px; color: #666; margin-top: 4px; }
+
+        .w-actions { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+        .w-actions button { margin: 0; width: 100%; padding: 14px 10px; font-size: 14px; }
+        .w-actions .btn-call { background: #28a745; }
+        .w-actions .btn-call:hover { background: #218838; }
+        .w-actions .btn-share { background: #17a2b8; }
+        .w-actions .btn-share:hover { background: #138496; }
+        .w-actions .btn-logout { background: #6c757d; }
+        .w-actions .btn-logout:hover { background: #5a6268; }
+
+        .w-history-item {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 10px 12px; border-bottom: 1px solid #eee; font-size: 13px;
+        }
+        .w-history-item:last-child { border-bottom: none; }
+        .w-history-item .h-time { color: #666; font-size: 12px; }
+        .w-history-item .h-action { font-weight: bold; }
+        .w-history-item .h-action.in { color: #28a745; }
+        .w-history-item .h-action.out { color: #dc3545; }
+        .w-history-item .h-result { font-size: 11px; padding: 2px 8px; border-radius: 10px; }
+        .w-history-item .h-result.ok { background: #d4edda; color: #155724; }
+        .w-history-item .h-result.bad { background: #f8d7da; color: #721c24; }
+
+        .w-login-box {
+            max-width: 400px; margin: 40px auto; text-align: center;
+            padding: 30px 20px; background: white; border-radius: 15px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        .w-login-box h2 { color: #0056b3; margin-top: 0; }
+        .w-login-box p { color: #666; font-size: 14px; margin-bottom: 20px; }
+        .w-login-box input {
+            width: 100%; padding: 15px; font-size: 18px; text-align: center;
+            border: 2px solid #ddd; border-radius: 10px; margin-bottom: 15px;
+            letter-spacing: 2px; font-weight: bold;
+        }
+        .w-login-box input:focus { outline: none; border-color: #0056b3; }
+        .w-login-box button { padding: 15px; font-size: 16px; }
+
+        /* ===== ĐĂNG NHẬP BẢO VỆ ===== */
+        .guard-login-overlay {
+            position: fixed; inset: 0; background: linear-gradient(135deg, #1e3c72, #2a5298);
+            z-index: 9998; display: flex; align-items: center; justify-content: center;
+            padding: 20px;
+        }
+        .guard-login-box {
+            background: white; border-radius: 16px; padding: 30px 25px;
+            max-width: 380px; width: 100%; text-align: center;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+        }
+        .guard-login-box .icon { font-size: 50px; margin-bottom: 10px; }
+        .guard-login-box h2 { color: #0056b3; margin: 0 0 8px 0; font-size: 20px; }
+        .guard-login-box p { color: #666; font-size: 13px; margin-bottom: 20px; }
+        .guard-login-box input[type="password"] {
+            width: 100%; padding: 15px; font-size: 22px; text-align: center;
+            border: 2px solid #ddd; border-radius: 10px; letter-spacing: 6px;
+            font-weight: bold; margin-bottom: 15px;
+        }
+        .guard-login-box input[type="password"]:focus { outline: none; border-color: #0056b3; }
+        .guard-login-box button { padding: 15px; font-size: 16px; width: 100%; }
+        .guard-login-box .err { color: #dc3545; font-size: 13px; margin-top: 10px; min-height: 18px; }
+
+        .guard-session-bar {
+            background: #fff3cd; border-left: 4px solid #fd7e14;
+            padding: 8px 12px; border-radius: 5px; font-size: 12px;
+            color: #664d03; margin-bottom: 10px; display: flex;
+            justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;
+        }
+        .guard-session-bar button {
+            padding: 6px 12px; font-size: 12px; width: auto; margin: 0;
+            background: #dc3545;
+        }
 
         @media (min-width: 768px) {
             button { width: auto; }
@@ -107,10 +221,23 @@
 
 <div class="toast" id="toast"></div>
 
+<!-- MÀN HÌNH ĐĂNG NHẬP BẢO VỆ -->
+<div id="guard-login-overlay" class="guard-login-overlay" style="display:none;">
+  <div class="guard-login-box">
+    <div class="icon">👮</div>
+    <h2>Đăng Nhập Bảo Vệ</h2>
+    <p>Nhập mã PIN để sử dụng chức năng quét QR tại cổng</p>
+    <input type="password" id="guard-pin-input" placeholder="••••••"
+           inputmode="numeric" maxlength="20" autocomplete="off"
+           onkeypress="if(event.key==='Enter') guardLogin()">
+    <button class="btn-success" id="guard-login-btn" onclick="guardLogin()">🔓 Đăng nhập</button>
+    <div class="err" id="guard-login-err"></div>
+  </div>
+</div>
+
 <div class="container">
     <h1>🏗️ Hệ Thống Quản Lý An Toàn Công Trình</h1>
 
-    <!-- CHỌN VAI TRÒ -->
     <div style="text-align:center; margin-bottom: 5px; font-size: 13px; color:#666; font-weight:bold;">BẠN ĐANG TRUY CẬP VỚI VAI TRÒ:</div>
     <div class="role-bar">
         <button class="role-btn active" onclick="setRole('guard', this)">👮 Lực lượng Bảo vệ</button>
@@ -118,7 +245,6 @@
         <button class="role-btn" onclick="setRole('worker', this)">👷 Công nhân / Khách</button>
     </div>
 
-    <!-- TABS -->
     <div class="tabs">
         <div class="tab active" onclick="switchTab('scan-qr')">📷 Check-in / Check-out</div>
         <div class="tab" onclick="switchTab('register')">📝 Đăng ký & Cấp mã</div>
@@ -126,10 +252,10 @@
         <div class="tab" onclick="switchTab('admin')">📈 Báo cáo thống kê</div>
     </div>
 
-    <!-- TAB 1: QUÉT QR -->
+    <!-- TAB 1: QUÉT QR (chỉ bảo vệ) -->
     <div id="scan-qr" class="content active">
         <div class="info-banner">
-            <strong>Hướng dẫn:</strong> Quét mã QR cá nhân hoặc mã tại cổng. Hệ thống tự động ghi nhận giờ vào/ra. Nếu camera khó quét, hãy dùng ô <strong>nhập mã thủ công</strong> bên dưới.
+            <strong>Hướng dẫn:</strong> Quét mã QR cá nhân hoặc mã tại cổng. Hệ thống tự động ghi nhận giờ vào/ra.
         </div>
 
         <div id="warn-checkout" class="warn-banner" style="display:none;"></div>
@@ -153,7 +279,7 @@
         <div id="result-qr" class="result-box"></div>
     </div>
 
-    <!-- TAB 2: ĐĂNG KÝ MỚI (KHÔNG ẢNH, CÓ SĐT) -->
+    <!-- TAB 2: ĐĂNG KÝ -->
     <div id="register" class="content">
         <h2>Đăng Ký Mới</h2>
         <div class="info-banner">
@@ -304,6 +430,80 @@
     </div>
 </div>
 
+<!-- CỔNG CÔNG NHÂN -->
+<div id="worker-portal" class="worker-portal">
+  <div id="w-login" class="w-login-box">
+    <h2>👷 Cổng Công Nhân</h2>
+    <p>Nhập mã số định danh của bạn để xem thông tin cá nhân, thẻ QR và lịch sử ra vào.</p>
+    <input type="text" id="w-login-id" placeholder="VD: NV021" autocomplete="off"
+           onkeypress="if(event.key==='Enter') workerLogin()">
+    <button class="btn-success" onclick="workerLogin()">🔓 Đăng nhập</button>
+    <div id="w-login-error" style="color:red;margin-top:10px;font-size:14px;"></div>
+  </div>
+
+  <div id="w-content" style="display:none;">
+    <div class="w-hero">
+      <h2 id="w-name">—</h2>
+      <div class="w-id">Mã ID: <strong id="w-id">—</strong> · <span id="w-unit">—</span></div>
+      <div id="w-status" class="w-status out">⏸ Đang ở ngoài</div>
+    </div>
+
+    <div id="w-alerts"></div>
+
+    <div class="w-grid">
+      <div class="w-stat">
+        <div class="w-num" id="w-stat-days">0</div>
+        <div class="w-label">Ngày công (30 ngày)</div>
+      </div>
+      <div class="w-stat">
+        <div class="w-num" id="w-stat-hours">0h</div>
+        <div class="w-label">Tổng giờ trong CT</div>
+      </div>
+      <div class="w-stat">
+        <div class="w-num" id="w-stat-turns">0</div>
+        <div class="w-label">Lượt ra vào</div>
+      </div>
+      <div class="w-stat">
+        <div class="w-num" id="w-stat-warn" style="color:#dc3545;">0</div>
+        <div class="w-label">Cảnh báo</div>
+      </div>
+    </div>
+
+    <div class="w-card">
+      <h3>🪪 Thẻ QR của tôi</h3>
+      <div class="w-qr-big">
+        <div class="qr-code" id="w-qr-canvas"></div>
+        <div class="qr-info">
+          <div class="name" id="w-qr-name">—</div>
+          <div class="meta" id="w-qr-meta">—</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="w-actions">
+      <button class="btn-success" onclick="wDownloadQR()">📥 Tải QR</button>
+      <button class="btn-share" onclick="wShareQR()">📤 Chia sẻ</button>
+      <button class="btn-warning" onclick="wRefresh()">🔄 Làm mới</button>
+      <button class="btn-logout" onclick="workerLogout()">🚪 Đăng xuất</button>
+    </div>
+
+    <div class="w-card">
+      <h3>📜 Lịch sử ra vào của tôi (50 lượt gần nhất)</h3>
+      <div id="w-history"><div style="text-align:center;color:#999;padding:20px;">Đang tải...</div></div>
+    </div>
+
+    <div class="w-card">
+      <h3>📞 Liên hệ khẩn cấp</h3>
+      <div class="w-actions">
+        <button class="btn-call" onclick="wCall('0900000000')">📞 Ban quản lý</button>
+        <button class="btn-call" onclick="wCall('115')">🚑 Y tế (115)</button>
+        <button class="btn-call" onclick="wCall('113')">🚓 Công an (113)</button>
+        <button class="btn-call" onclick="wCall('114')">🚒 Cứu hỏa (114)</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script>
     // ==========================================
     // CẤU HÌNH
@@ -322,6 +522,127 @@
     let rangeKey = "";
 
     // ==========================================
+    // BẢO MẬT BẢO VỆ
+    // ==========================================
+    const GUARD_SESSION_KEY = 'guard_pin';
+    const GUARD_SESSION_TIME = 'guard_time';
+    const GUARD_TIMEOUT_MS = 30 * 60 * 1000;
+
+    let guardPin = sessionStorage.getItem(GUARD_SESSION_KEY) || '';
+    let guardLastActivity = Number(sessionStorage.getItem(GUARD_SESSION_TIME) || 0);
+    let guardTimerInterval = null;
+
+    function guardSessionConHan() {
+        if (!guardPin) return false;
+        if (Date.now() - guardLastActivity > GUARD_TIMEOUT_MS) {
+            guardLogout('Phiên đã hết hạn sau 30 phút. Vui lòng đăng nhập lại.');
+            return false;
+        }
+        return true;
+    }
+
+    function guardCapNhatHoatDong() {
+        if (!guardPin) return;
+        guardLastActivity = Date.now();
+        sessionStorage.setItem(GUARD_SESSION_TIME, String(guardLastActivity));
+    }
+
+    async function guardLogin() {
+        const input = document.getElementById('guard-pin-input');
+        const errEl = document.getElementById('guard-login-err');
+        const btn = document.getElementById('guard-login-btn');
+        const pin = String(input.value || '').trim();
+
+        errEl.textContent = '';
+        if (!pin) { errEl.textContent = 'Vui lòng nhập mã PIN'; return; }
+        if (pin.length < 4) { errEl.textContent = 'Mã PIN phải có ít nhất 4 ký tự'; return; }
+
+        btn.disabled = true; btn.innerText = 'Đang kiểm tra...';
+
+        try {
+            const res = await fetch(API_URL, {
+                method: 'POST',
+                body: JSON.stringify({ action: 'login_guard', pin: pin }),
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+            });
+            const r = await res.json();
+
+            if (r.status !== 'success') {
+                errEl.textContent = r.message || 'Đăng nhập thất bại';
+                btn.disabled = false; btn.innerText = '🔓 Đăng nhập';
+                input.value = '';
+                input.focus();
+                return;
+            }
+
+            guardPin = pin;
+            guardCapNhatHoatDong();
+            sessionStorage.setItem(GUARD_SESSION_KEY, pin);
+            input.value = '';
+            dongGuardLogin();
+            capNhatGuardBar();
+            startGuardTimer();
+            showToast('✅ Đăng nhập bảo vệ thành công');
+            switchTab('scan-qr');
+        } catch (e) {
+            errEl.textContent = 'Lỗi kết nối: ' + e.message;
+            btn.disabled = false; btn.innerText = '🔓 Đăng nhập';
+        }
+    }
+
+    function guardLogout(msg) {
+        guardPin = '';
+        guardLastActivity = 0;
+        sessionStorage.removeItem(GUARD_SESSION_KEY);
+        sessionStorage.removeItem(GUARD_SESSION_TIME);
+        if (guardTimerInterval) { clearInterval(guardTimerInterval); guardTimerInterval = null; }
+        capNhatGuardBar();
+        stopScanner();
+        if (msg) showToast(msg, 4000);
+        if (currentRole === 'guard') {
+            moGuardLogin();
+        }
+    }
+
+    function moGuardLogin() {
+        document.getElementById('guard-login-overlay').style.display = 'flex';
+        setTimeout(() => document.getElementById('guard-pin-input').focus(), 100);
+    }
+
+    function dongGuardLogin() {
+        document.getElementById('guard-login-overlay').style.display = 'none';
+        document.getElementById('guard-login-err').textContent = '';
+    }
+
+    function capNhatGuardBar() {
+        const scanTab = document.getElementById('scan-qr');
+        if (!scanTab) return;
+        let bar = document.getElementById('guard-session-bar');
+        if (!guardPin) {
+            if (bar) bar.remove();
+            return;
+        }
+        if (!bar) {
+            bar = document.createElement('div');
+            bar.id = 'guard-session-bar';
+            bar.className = 'guard-session-bar';
+            scanTab.insertBefore(bar, scanTab.firstChild);
+        }
+        const conLai = Math.max(0, Math.ceil((GUARD_TIMEOUT_MS - (Date.now() - guardLastActivity)) / 60000));
+        bar.innerHTML = `<span>🔒 Phiên bảo vệ còn <strong>${conLai} phút</strong></span>
+                         <button onclick="guardLogout('Đã đăng xuất')">🚪 Đăng xuất</button>`;
+    }
+
+    function startGuardTimer() {
+        if (guardTimerInterval) clearInterval(guardTimerInterval);
+        guardTimerInterval = setInterval(() => {
+            if (!guardPin) return;
+            if (!guardSessionConHan()) return;
+            capNhatGuardBar();
+        }, 30000);
+    }
+
+    // ==========================================
     // TIỆN ÍCH
     // ==========================================
     function showToast(msg, duration = 2500) {
@@ -329,6 +650,17 @@
         t.innerText = msg;
         t.classList.add('show');
         setTimeout(() => t.classList.remove('show'), duration);
+    }
+
+    async function stopScanner() {
+        try {
+            if (html5QrCode && html5QrCode.isScanning) {
+                await html5QrCode.stop();
+                isScanning = false;
+            }
+        } catch (e) {
+            console.warn('Dừng camera:', e);
+        }
     }
 
     async function setRole(role, btn) {
@@ -357,21 +689,58 @@
         document.querySelectorAll('.role-btn').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
 
+        const scanTab = document.querySelector('.tab[onclick="switchTab(\'scan-qr\')"]');
         const adminTab = document.querySelector('.tab[onclick="switchTab(\'admin\')"]');
         const regTab = document.querySelector('.tab[onclick="switchTab(\'register\')"]');
+        const workerPortal = document.getElementById('worker-portal');
+        const mainTabs = document.querySelector('.tabs');
+        const mainContents = ['scan-qr', 'register', 'my-qr', 'admin'];
 
-        if (role === 'worker' || role === 'guard') {
+        if (role === 'worker') {
+            await stopScanner();
+            scanTab.style.display = 'none';
+
+            mainTabs.style.display = 'none';
+            mainContents.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.classList.remove('active');
+            });
+            workerPortal.classList.add('active');
+
+            const saved = localStorage.getItem('worker_maID');
+            if (saved) {
+                document.getElementById('w-login-id').value = saved;
+                workerLogin(saved);
+            }
+        } else if (role === 'guard') {
+            workerPortal.classList.remove('active');
+            mainTabs.style.display = 'flex';
+
+            scanTab.style.display = '';
             adminTab.style.display = 'none';
             regTab.style.display = 'none';
-            if (document.getElementById('admin').classList.contains('active') ||
-                document.getElementById('register').classList.contains('active')) {
+
+            if (!guardSessionConHan()) {
+                document.querySelectorAll('.content').forEach(c => c.classList.remove('active'));
+                document.getElementById('scan-qr').classList.add('active');
+                moGuardLogin();
+                showToast('Vui lòng đăng nhập bảo vệ để quét QR', 3000);
+            } else {
                 switchTab('scan-qr');
             }
         } else {
+            workerPortal.classList.remove('active');
+            mainTabs.style.display = 'flex';
+
+            scanTab.style.display = 'none';
             adminTab.style.display = '';
             regTab.style.display = '';
+
+            await stopScanner();
+            switchTab('admin');
         }
-        showToast('Đã chuyển vai trò: ' + (role === 'guard' ? 'Bảo vệ' : role === 'admin' ? 'Quản lý' : 'Người ra vào'));
+
+        showToast('Đã chuyển vai trò: ' + (role === 'guard' ? 'Bảo vệ' : role === 'admin' ? 'Quản lý' : 'Công nhân'));
     }
 
     function playBeep(isSuccess) {
@@ -387,13 +756,38 @@
     }
 
     async function sendDataToSheet(maID, hoTen, ketQua, ghiChu, hanhDong = '') {
+        if (!guardPin) {
+            showToast('Phiên đã hết hạn. Vui lòng đăng nhập lại.', 3000);
+            guardLogout('Phiên đã hết hạn');
+            return false;
+        }
         try {
-            await fetch(API_URL, {
+            const res = await fetch(API_URL, {
                 method: 'POST',
-                body: JSON.stringify({ action: "scan", maID, hoTen, ketQua, ghiChu, hanhDong })
+                body: JSON.stringify({
+                    action: "scan", pin: guardPin,
+                    maID, hoTen, ketQua, ghiChu, hanhDong
+                })
             });
-        } catch (error) { console.error("Lỗi gửi dữ liệu:", error); }
-        setTimeout(syncPresence, 800);
+            const r = await res.json();
+            if (r.status !== 'success') {
+                if (r.needRelogin) {
+                    showToast(r.message || 'Phiên hết hạn', 4000);
+                    guardLogout(r.message);
+                } else {
+                    showToast('Lỗi: ' + (r.message || 'Không xác định'), 3000);
+                }
+                return false;
+            }
+            guardCapNhatHoatDong();
+            capNhatGuardBar();
+            setTimeout(syncPresence, 800);
+            return true;
+        } catch (error) {
+            console.error("Lỗi gửi dữ liệu:", error);
+            showToast('Lỗi kết nối', 3000);
+            return false;
+        }
     }
 
     function parseNgay(v) {
@@ -709,6 +1103,9 @@
         XLSX.writeFile(wb, 'lich_su_' + from + '_den_' + to + '.xlsx');
     }
 
+    // ==========================================
+    // QUÉT QR
+    // ==========================================
     const html5QrCode = new Html5Qrcode("reader");
     let isScanning = false;
 
@@ -727,7 +1124,7 @@
             if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
         } else {
             const hoTen = nhanSu[1], donVi = nhanSu[2], chungChi = nhanSu[3], trangThai = nhanSu[4];
-            const soDienThoai = nhanSu[5] || '';   // ← CỘT F
+            const soDienThoai = nhanSu[5] || '';
             const hanMaQR = nhanSu[6];
             const loai = nhanSu[7] || 'worker';
             const tuGio = nhanSu[10];
@@ -827,11 +1224,12 @@
         }
     }
 
-    window.addEventListener('load', () => {
-        startScanner();
-    });
-
     function switchTab(tabId) {
+        if (tabId === 'scan-qr' && currentRole !== 'guard') {
+            showToast('Chỉ Lực lượng Bảo vệ mới được quét QR');
+            return;
+        }
+
         document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
         document.querySelectorAll('.content').forEach(c => c.classList.remove('active'));
         const tabEl = document.querySelector(`.tab[onclick="switchTab('${tabId}')"]`);
@@ -839,13 +1237,24 @@
         document.getElementById(tabId).classList.add('active');
 
         if (tabId === 'admin') loadData();
+
         if (tabId === 'scan-qr') {
-            init();
-            restartScanner();
+            if (currentRole === 'guard') {
+                if (!guardSessionConHan()) {
+                    moGuardLogin();
+                    return;
+                }
+                init();
+                restartScanner();
+                capNhatGuardBar();
+            }
+        } else {
+            stopScanner();
         }
     }
 
     async function manualCheckIn() {
+        if (!guardSessionConHan()) { moGuardLogin(); return; }
         const code = document.getElementById('manualCode').value.trim();
         if (!code) { showToast('Vui lòng nhập mã!'); return; }
         document.getElementById('manualCode').value = '';
@@ -853,6 +1262,9 @@
         processQRCode(code);
     }
 
+    // ==========================================
+    // ĐĂNG KÝ
+    // ==========================================
     function toggleRegFields() {
         const type = document.getElementById('reg-type').value;
         document.getElementById('group-vehicle').style.display = type === 'vehicle' ? 'block' : 'none';
@@ -898,7 +1310,7 @@
             action: "register",
             pin: currentPin,
             maID, hoTen, cccd, donVi, chungChi,
-            soDienThoai,          // ← THÊM
+            soDienThoai,
             loai: type,
             bienSo: plate,
             mucDich: purpose,
@@ -1125,15 +1537,196 @@
         } catch (error) { console.error("Lỗi tải dữ liệu:", error); }
     }
 
-    init().then(syncPresence);
+    // ==========================================
+    // CỔNG CÔNG NHÂN
+    // ==========================================
+    let workerData = null;
+
+    async function workerLogin(maIDTuDong) {
+        const input = document.getElementById('w-login-id');
+        const maID = String(maIDTuDong || input.value || '').trim();
+        const errEl = document.getElementById('w-login-error');
+        errEl.textContent = '';
+
+        if (!maID) { errEl.textContent = 'Vui lòng nhập mã ID'; return; }
+
+        const btn = event && event.target;
+        if (btn) { btn.disabled = true; btn.innerText = 'Đang tải...'; }
+
+        try {
+            const res = await fetch(API_URL, {
+                method: 'POST',
+                body: JSON.stringify({ action: 'my_info', maID: maID }),
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+            });
+            const r = await res.json();
+
+            if (r.status !== 'success') {
+                errEl.textContent = r.message || 'Không tìm thấy thông tin';
+                if (btn) { btn.disabled = false; btn.innerText = '🔓 Đăng nhập'; }
+                return;
+            }
+
+            workerData = r;
+            localStorage.setItem('worker_maID', maID);
+            renderWorkerPortal(r);
+            document.getElementById('w-login').style.display = 'none';
+            document.getElementById('w-content').style.display = 'block';
+        } catch (e) {
+            errEl.textContent = 'Lỗi kết nối: ' + e.message;
+            if (btn) { btn.disabled = false; btn.innerText = '🔓 Đăng nhập'; }
+        }
+    }
+
+    function workerLogout() {
+        localStorage.removeItem('worker_maID');
+        workerData = null;
+        document.getElementById('w-login').style.display = 'block';
+        document.getElementById('w-content').style.display = 'none';
+        document.getElementById('w-login-id').value = '';
+        document.getElementById('w-login-error').textContent = '';
+    }
+
+    function renderWorkerPortal(r) {
+        const ns = r.nhanSu;
+
+        document.getElementById('w-name').textContent = ns.hoTen || '—';
+        document.getElementById('w-id').textContent = ns.maID || '—';
+        document.getElementById('w-unit').textContent = ns.donVi || '—';
+
+        const statusEl = document.getElementById('w-status');
+        if (r.trangThaiHienTai === 'trong') {
+            statusEl.className = 'w-status in';
+            statusEl.innerHTML = '✅ Đang trong công trường' + (r.gioVaoGanNhat ? '<br><small style="font-weight:normal;opacity:0.9;">Vào lúc: ' + r.gioVaoGanNhat + '</small>' : '');
+        } else {
+            statusEl.className = 'w-status out';
+            statusEl.textContent = '⏸ Đang ở ngoài công trường';
+        }
+
+        document.getElementById('w-stat-days').textContent = r.thongKe.soNgayCong;
+        document.getElementById('w-stat-hours').textContent = r.thongKe.tongGio + 'h';
+        document.getElementById('w-stat-turns').textContent = r.thongKe.soLuot;
+        document.getElementById('w-stat-warn').textContent = r.thongKe.soCanhBao;
+
+        const alerts = [];
+        if (ns.chungChi !== 'Có') {
+            alerts.push({ type: 'danger', title: '⚠️ Thiếu chứng chỉ an toàn', msg: 'Bạn chưa có chứng chỉ AT — sẽ bị chặn khi vào công trường.' });
+        }
+        if (ns.hanQRRaw) {
+            const han = new Date(ns.hanQRRaw);
+            const conLai = Math.ceil((han - new Date()) / (24 * 3600 * 1000));
+            if (conLai < 0) {
+                alerts.push({ type: 'danger', title: '⛔ Mã QR đã hết hạn', msg: 'Hạn: ' + ns.hanQR + '. Vui lòng liên hệ ban quản lý để gia hạn.' });
+            } else if (conLai <= 3) {
+                alerts.push({ type: 'warn', title: '⏰ Mã QR sắp hết hạn', msg: 'Còn ' + conLai + ' ngày (hạn: ' + ns.hanQR + '). Liên hệ ban quản lý để gia hạn.' });
+            }
+        }
+        if (r.trangThaiHienTai === 'trong' && new Date().getHours() >= GIO_CANH_BAO_RA) {
+            alerts.push({ type: 'warn', title: '🌙 Đã muộn', msg: 'Đã quá ' + GIO_CANH_BAO_RA + ':00, đừng quên check-out khi ra về!' });
+        }
+        if (ns.trangThai && ns.trangThai !== 'Đang làm') {
+            alerts.push({ type: 'danger', title: '🚫 Tài khoản không hoạt động', msg: 'Trạng thái: ' + ns.trangThai });
+        }
+
+        const alertsEl = document.getElementById('w-alerts');
+        alertsEl.innerHTML = alerts.map(a =>
+            `<div class="w-alert ${a.type === 'danger' ? 'danger' : ''}">
+                <strong>${a.title}</strong>${a.msg}
+            </div>`
+        ).join('');
+
+        const qrEl = document.getElementById('w-qr-canvas');
+        qrEl.innerHTML = '';
+        new QRCode(qrEl, { text: ns.maID, width: 220, height: 220, correctLevel: QRCode.CorrectLevel.H });
+        document.getElementById('w-qr-name').textContent = ns.hoTen;
+        document.getElementById('w-qr-meta').innerHTML =
+            'Mã ID: <strong>' + ns.maID + '</strong>' +
+            (ns.hanQR ? ' · Hạn: ' + ns.hanQR : '');
+
+        const histEl = document.getElementById('w-history');
+        if (!r.lichSu || r.lichSu.length === 0) {
+            histEl.innerHTML = '<div style="text-align:center;color:#999;padding:20px;">Chưa có lượt ra vào nào trong 30 ngày qua</div>';
+        } else {
+            histEl.innerHTML = r.lichSu.slice().reverse().map(h => {
+                const isOk = h.ketQua.indexOf('Hợp lệ') === 0;
+                const actionLabel = h.hanhDong === 'in' ? 'VÀO' : (h.hanhDong === 'out' ? 'RA' : '—');
+                return `<div class="w-history-item">
+                    <div>
+                        <div class="h-action ${h.hanhDong}">${actionLabel}</div>
+                        <div class="h-time">${h.thoiGian}</div>
+                    </div>
+                    <div class="h-result ${isOk ? 'ok' : 'bad'}">${isOk ? 'Hợp lệ' : h.ketQua}</div>
+                </div>`;
+            }).join('');
+        }
+    }
+
+    async function wRefresh() {
+        const maID = localStorage.getItem('worker_maID');
+        if (!maID) { showToast('Vui lòng đăng nhập lại'); return; }
+        showToast('Đang làm mới...');
+        await workerLogin(maID);
+        showToast('Đã cập nhật');
+    }
+
+    function wDownloadQR() {
+        if (!workerData) return;
+        downloadQR(workerData.nhanSu.maID, workerData.nhanSu.hoTen);
+    }
+
+    async function wShareQR() {
+        if (!workerData) return;
+        const ns = workerData.nhanSu;
+        const text = `Thẻ QR công trường\nHọ tên: ${ns.hoTen}\nMã ID: ${ns.maID}\nĐơn vị: ${ns.donVi}`;
+        if (navigator.share) {
+            try {
+                await navigator.share({ title: 'Thẻ QR công trường', text: text });
+                return;
+            } catch (e) { }
+        }
+        try {
+            await navigator.clipboard.writeText(text);
+            showToast('Đã copy thông tin thẻ QR');
+        } catch (e) {
+            alert(text);
+        }
+    }
+
+    function wCall(phone) {
+        if (!phone) return;
+        window.location.href = 'tel:' + phone;
+    }
+
+    // ==========================================
+    // KHỞI TẠO
+    // ==========================================
+    init();
     renderPresenceTable();
     renderHistoryTable();
+
+    window.addEventListener('load', () => {
+        if (currentRole === 'guard') {
+            if (guardSessionConHan()) {
+                startScanner();
+                capNhatGuardBar();
+                startGuardTimer();
+            } else {
+                moGuardLogin();
+            }
+        }
+    });
 
     setInterval(() => { if (!document.hidden) syncPresence(); }, 5000);
     document.addEventListener('visibilitychange', () => { if (!document.hidden) syncPresence(); });
 
     document.getElementById('range-from').value = homNayISO();
     document.getElementById('range-to').value = homNayISO();
+
+    // Khôi phục phiên công nhân nếu đã đăng nhập trước đó
+    if (localStorage.getItem('worker_maID')) {
+        const workerBtn = document.querySelector('.role-btn[onclick*="worker"]');
+        if (workerBtn) setRole('worker', workerBtn);
+    }
 </script>
 </body>
 </html>
