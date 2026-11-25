@@ -433,9 +433,9 @@
 <!-- CỔNG CÔNG NHÂN -->
 <div id="worker-portal" class="worker-portal">
   <div id="w-login" class="w-login-box">
-    <h2>👷 Cổng Công Nhân</h2>
-    <p>Nhập mã số định danh của bạn để xem thông tin cá nhân, thẻ QR và lịch sử ra vào.</p>
-    <input type="text" id="w-login-id" placeholder="VD: NV021" autocomplete="off"
+    <h2>👷 Cổng Công Nhân / Khách</h2>
+    <p>Nhập <b>Mã định danh</b> HOẶC <b>Số điện thoại</b> của bạn để xem thông tin cá nhân, thẻ QR và lịch sử ra vào.</p>
+    <input type="text" id="w-login-id" placeholder="VD: NV021 hoặc 0901234567" autocomplete="off"
            onkeypress="if(event.key==='Enter') workerLogin()">
     <button class="btn-success" onclick="workerLogin()">🔓 Đăng nhập</button>
     <div id="w-login-error" style="color:red;margin-top:10px;font-size:14px;"></div>
@@ -1544,11 +1544,11 @@
 
     async function workerLogin(maIDTuDong) {
         const input = document.getElementById('w-login-id');
-        const maID = String(maIDTuDong || input.value || '').trim();
+        const inputValue = String(maIDTuDong || input.value || '').trim();
         const errEl = document.getElementById('w-login-error');
         errEl.textContent = '';
 
-        if (!maID) { errEl.textContent = 'Vui lòng nhập mã ID'; return; }
+        if (!inputValue) { errEl.textContent = 'Vui lòng nhập Mã ID hoặc Số điện thoại'; return; }
 
         const btn = event && event.target;
         if (btn) { btn.disabled = true; btn.innerText = 'Đang tải...'; }
@@ -1556,7 +1556,7 @@
         try {
             const res = await fetch(API_URL, {
                 method: 'POST',
-                body: JSON.stringify({ action: 'my_info', maID: maID }),
+                body: JSON.stringify({ action: 'my_info', query: inputValue }),
                 headers: { 'Content-Type': 'text/plain;charset=utf-8' }
             });
             const r = await res.json();
@@ -1568,7 +1568,7 @@
             }
 
             workerData = r;
-            localStorage.setItem('worker_maID', maID);
+            localStorage.setItem('worker_maID', r.nhanSu.maID); 
             renderWorkerPortal(r);
             document.getElementById('w-login').style.display = 'none';
             document.getElementById('w-content').style.display = 'block';
@@ -1705,14 +1705,11 @@
     renderHistoryTable();
 
     window.addEventListener('load', () => {
-        if (currentRole === 'guard') {
-            if (guardSessionConHan()) {
-                startScanner();
-                capNhatGuardBar();
-                startGuardTimer();
-            } else {
-                moGuardLogin();
-            }
+        // Đã xóa logic tự động mở đăng nhập bảo vệ, giúp hiển thị 3 vai trò ngay từ đầu
+        if (currentRole === 'guard' && guardSessionConHan()) {
+            startScanner();
+            capNhatGuardBar();
+            startGuardTimer();
         }
     });
 

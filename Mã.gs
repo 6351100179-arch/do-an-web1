@@ -140,10 +140,10 @@ function doPost(e) {
       return json_({ "status": "success" });
     }
 
-    // LẤY THÔNG TIN CÁ NHÂN (CỔNG CÔNG NHÂN)
+    // LẤY THÔNG TIN CÁ NHÂN (CỔNG CÔNG NHÂN - HỖ TRỢ MÃ ID HOẶC SĐT)
     if (data.action === "my_info") {
-      var maID = String(data.maID || "").trim();
-      if (!maID) return json_({ "status": "error", "message": "Thiếu mã ID" });
+      var query = String(data.query || data.maID || "").trim(); 
+      if (!query) return json_({ "status": "error", "message": "Thiếu thông tin tra cứu (Mã ID hoặc SĐT)" });
 
       var dm = ss.getSheetByName("DM_NHAN_SU");
       if (!dm) return json_({ "status": "error", "message": "Chưa có sheet DM_NHAN_SU" });
@@ -151,16 +151,24 @@ function doPost(e) {
       var dmData = dm.getDataRange().getValues();
       var header = dmData[0];
       var nhanSu = null;
+      
       for (var i = 1; i < dmData.length; i++) {
-        if (String(dmData[i][0]).trim() === maID) {
+        var rowData = dmData[i];
+        var maID = String(rowData[0]).trim();
+        var sdt = String(rowData[5] || "").trim(); // Cột F là Số Điện Thoại
+        
+        if (maID.toLowerCase() === query.toLowerCase() || (sdt !== "" && sdt === query)) {
           nhanSu = {};
           for (var c = 0; c < header.length; c++) {
-            nhanSu[header[c]] = dmData[i][c];
+            nhanSu[header[c]] = rowData[c];
           }
           break;
         }
       }
-      if (!nhanSu) return json_({ "status": "error", "message": "Không tìm thấy mã ID này" });
+      
+      if (!nhanSu) return json_({ "status": "error", "message": "Không tìm thấy Mã ID hoặc Số điện thoại này" });
+
+      var maIDThucTe = String(nhanSu["Mã ID"] || "").trim(); 
 
       var log = ss.getSheetByName("LOG_RA_VAO");
       var lichSu = [];
@@ -170,7 +178,7 @@ function doPost(e) {
       if (log) {
         var logData = log.getDataRange().getValues().slice(1);
         logData.forEach(function (r) {
-          if (String(r[1]).trim() !== maID) return;
+          if (String(r[1]).trim() !== maIDThucTe) return;
           var t = r[0] instanceof Date ? r[0] : new Date(r[0]);
           if (isNaN(t.getTime())) return;
           var ngay = Utilities.formatDate(t, MUI_GIO, "yyyy-MM-dd");
@@ -216,7 +224,7 @@ function doPost(e) {
       return json_({
         status: "success",
         nhanSu: {
-          maID: nhanSu["Mã ID"] || maID,
+          maID: maIDThucTe,
           hoTen: nhanSu["Họ Tên"] || "",
           donVi: nhanSu["Đơn Vị"] || "",
           chungChi: nhanSu["Chứng Chỉ AT"] || "",
