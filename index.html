@@ -1637,7 +1637,24 @@
 
         const qrEl = document.getElementById('w-qr-canvas');
         qrEl.innerHTML = '';
-        new QRCode(qrEl, { text: ns.maID, width: 220, height: 220, correctLevel: QRCode.CorrectLevel.H });
+        
+        // ĐÃ SỬA LỖI MẤT MÃ QR TẠI ĐÂY
+        if (ns.maID && String(ns.maID).trim() !== "" && String(ns.maID) !== "undefined") {
+            try {
+                new QRCode(qrEl, { 
+                    text: String(ns.maID).trim(), 
+                    width: 220, 
+                    height: 220, 
+                    correctLevel: QRCode.CorrectLevel.H 
+                });
+            } catch (err) {
+                console.error("Lỗi vẽ QR:", err);
+                qrEl.innerHTML = '<div style="color:#dc3545;font-size:13px;padding:20px;text-align:center;">Lỗi tạo mã QR. Vui lòng kiểm tra lại Mã ID.</div>';
+            }
+        } else {
+            qrEl.innerHTML = '<div style="color:#dc3545;font-size:13px;padding:20px;text-align:center;">Không tìm thấy Mã ID để tạo QR.</div>';
+        }
+
         document.getElementById('w-qr-name').textContent = ns.hoTen;
         document.getElementById('w-qr-meta').innerHTML =
             'Mã ID: <strong>' + ns.maID + '</strong>' +
